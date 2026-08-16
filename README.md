@@ -4,7 +4,7 @@ A decentralized Mystery & ARG adjudication protocol on GenLayer. Creators open a
 Mystery Case with a GEN bounty and a secret solution rubric; Hunters submit an
 evidence URL; GenLayer's AI validator consensus reads it and rules SOLVED or
 UNSOLVED, paying the bounty out automatically on a solve.
-
+live demo:https://sherlock-layer.pages.dev/
 ## Project layout
 
 ```
