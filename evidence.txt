@@ -1,0 +1,3 @@
+Investigation Report - Room 404 Breach
+
+After a thorough investigation of the incident, I have reconstructed the intruder's path. There were no signs of forced entry on the server room door. It is now clear that the intruder accessed the building via the ventilation shaft. Once they reached the server room, they were able to bypass the lock using the master badge that had been left unattended in the hallway earlier that day. This allowed them to enter and exit without leaving any physical damage.
