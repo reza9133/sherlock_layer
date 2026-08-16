@@ -1,0 +1,30 @@
+{
+  "name": "sherlocklayer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A decentralized Mystery & ARG adjudication protocol built on GenLayer Intelligent Contracts.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "13.5.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "genlayer-js": "latest",
+    "ethers": "^5.7.2",
+    "lucide-react": "^0.288.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "13.5.6"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  }
+}
