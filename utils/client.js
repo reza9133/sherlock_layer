@@ -46,7 +46,7 @@ const FALLBACK_BRADBURY_CHAIN = {
 
 export const bradburyChain = genlayerChains.testnetBradbury ?? FALLBACK_BRADBURY_CHAIN;
 
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xa5F69a403F42800B4B2319446d7dC564D38F971A';
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xa2A42B92E60d79D8e90f5E904Da759a8776E2506';
 
 // ---------------------------------------------------------------------
 // RULE 4 — multi-provider-safe wallet resolution
