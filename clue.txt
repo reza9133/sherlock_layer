@@ -1,1 +1,3 @@
-The thief is Professor Moriarty and the stolen item is hidden in the Clock Tower.
+Evidence Document:
+The investigation confirms that the thief was 'Professor Moriarty'.
+Furthermore, the stolen item was hidden in the 'Clock Tower'.
