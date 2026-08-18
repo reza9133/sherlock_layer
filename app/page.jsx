@@ -26,6 +26,7 @@ import {
   fetchCase,
   createCase,
   submitEvidence,
+  claimBounty,
   cancelCase,
   formatGen,
   shortenAddress,
@@ -44,6 +45,7 @@ function StatusStamp({ status }) {
     OPEN: { cls: 'status-open', label: 'Open Case' },
     UNDER_REVIEW: { cls: 'status-review', label: 'Under Review' },
     SOLVED: { cls: 'status-solved', label: 'Solved' },
+    CLAIMED: { cls: 'status-solved', label: 'Claimed' },
     CANCELLED: { cls: 'status-cancelled', label: 'Cancelled' },
     EXPIRED: { cls: 'status-expired', label: 'Expired' },
   };
@@ -187,11 +189,12 @@ function CreateCaseModal({ account, onClose, onCreated }) {
 function CaseDetailModal({ caseId, account, onClose, onChanged }) {
   const [caseData, setCaseData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [evidenceUrl, setEvidenceUrl] = useState('');
+  const [evidenceText, setEvidenceText] = useState('');
   const [deliberating, setDeliberating] = useState(false);
   const [verdict, setVerdict] = useState(null); // { verdict, reasoning }
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [claiming, setClaiming] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -211,34 +214,44 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
 
   const isCreator =
     account && caseData && String(caseData.creator).toLowerCase() === String(account).toLowerCase();
+  const isSolver =
+    account && caseData && String(caseData.solver).toLowerCase() === String(account).toLowerCase();
 
   async function handleSubmitEvidence(e) {
     e.preventDefault();
     setError('');
     setVerdict(null);
 
-    if (!evidenceUrl.trim()) {
-      setError('Paste a source URL to your evidence (IPFS text file, GitHub gist/commit, etc).');
+    if (!evidenceText.trim()) {
+      setError('Paste your deduction text as evidence.');
       return;
     }
 
     setDeliberating(true);
     try {
-      await submitEvidence({ account, caseId, evidenceUrl });
-      // Verdict resolves synchronously on-chain; re-fetch the case to read
-      // the outcome rather than depending on the raw receipt shape.
+      await submitEvidence({ account, caseId, evidenceText });
       const fresh = await fetchCase(caseId);
       setCaseData(fresh);
-      setVerdict({
-        verdict: fresh.status === 'SOLVED' ? 'SOLVED' : 'UNSOLVED',
-        reasoning: fresh.last_verdict_reasoning,
-      });
       onChanged?.();
     } catch (err) {
       setError(err?.message || 'The submission failed. See console for details.');
       console.error(err);
     } finally {
       setDeliberating(false);
+    }
+  }
+
+  async function handleClaim() {
+    setClaiming(true);
+    setError('');
+    try {
+      await claimBounty({ account, caseId });
+      await reload();
+      onChanged?.();
+    } catch (err) {
+      setError(err?.message || 'Claim failed.');
+    } finally {
+      setClaiming(false);
     }
   }
 
@@ -308,42 +321,30 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
               <div className="border border-gold/40 bg-gold/5 rounded p-4 flex items-start gap-3">
                 <BadgeCheck className="text-gold shrink-0 mt-0.5" size={20} />
                 <div>
-                  <div className="font-case text-gold">Case Closed</div>
+                  <div className="font-case text-gold">Case Solved!</div>
                   <p className="text-sm text-ink-dim mt-1">
-                    Solved by {shortenAddress(caseData.solver)}. The bounty has been paid out.
+                    Solved by {shortenAddress(caseData.solver)}.
                   </p>
-                  {caseData.last_verdict_reasoning && (
-                    <p className="text-sm mt-2 italic text-ink-dim">
-                      AI reasoning: "{caseData.last_verdict_reasoning}"
-                    </p>
+                  {isSolver && (
+                    <button onClick={handleClaim} disabled={claiming} className="mt-3 gold-btn w-full py-2">
+                        {claiming ? <Loader2 className="animate-spin" /> : 'Claim Bounty'}
+                    </button>
                   )}
                 </div>
               </div>
             )}
 
-            {verdict && verdict.verdict === 'UNSOLVED' && (
-              <div className="border border-blood/40 bg-blood/10 rounded p-4 flex items-start gap-3">
-                <ShieldAlert className="text-blood shrink-0 mt-0.5" size={20} />
-                <div>
-                  <div className="font-case text-blood">Verdict: Unsolved</div>
-                  <p className="text-sm text-ink-dim mt-1">
-                    {verdict.reasoning || 'The AI adjudicator was not convinced by this evidence.'}
-                  </p>
-                </div>
+            {caseData.status === 'CLAIMED' && (
+              <div className="border border-gold/40 bg-gold/5 rounded p-4">
+                 <div className="font-case text-gold">Case Claimed</div>
+                 <p className="text-sm text-ink-dim">Bounty has been successfully claimed by the solver.</p>
               </div>
             )}
 
-            {caseData.evidence_url && caseData.status !== 'CANCELLED' && (
-              <div className="text-xs text-ink-dim flex items-center gap-1.5">
-                Last evidence submitted:{' '}
-                <a
-                  href={caseData.evidence_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-gold hover:underline flex items-center gap-1"
-                >
-                  {caseData.evidence_url} <ExternalLink size={12} />
-                </a>
+            {caseData.evidence_text && caseData.status !== 'CANCELLED' && (
+              <div className="text-xs text-ink-dim flex flex-col gap-1.5">
+                <span>Submitted evidence:</span>
+                <p className="p-2 border border-gold/20 rounded">{caseData.evidence_text}</p>
               </div>
             )}
 
@@ -352,13 +353,13 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
             {caseData.status === 'OPEN' && !isCreator && (
               <form onSubmit={handleSubmitEvidence} className="space-y-3">
                 <label className="block text-xs uppercase tracking-widest text-ink-dim">
-                  Submit Your Deduction (evidence source URL)
+                  Submit Your Deduction (Evidence Text)
                 </label>
-                <input
-                  className="paper-input w-full px-3 py-2 rounded"
-                  placeholder="https://ipfs.io/ipfs/... or a GitHub gist/commit URL"
-                  value={evidenceUrl}
-                  onChange={(e) => setEvidenceUrl(e.target.value)}
+                <textarea
+                  className="paper-input w-full px-3 py-2 rounded h-32"
+                  placeholder="Paste your deduction here..."
+                  value={evidenceText}
+                  onChange={(e) => setEvidenceText(e.target.value)}
                   disabled={deliberating}
                 />
                 <button
@@ -369,7 +370,7 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
                   {deliberating ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Validators are deliberating… (this can take 30–90s)
+                      Validators are deliberating…
                     </>
                   ) : (
                     <>
@@ -389,12 +390,6 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
                 {cancelling ? <Loader2 size={16} className="animate-spin" /> : <Skull size={16} />}
                 {cancelling ? 'Cancelling…' : 'Cancel Case & Reclaim Bounty'}
               </button>
-            )}
-
-            {caseData.status === 'OPEN' && isCreator && (
-              <p className="text-[0.7rem] text-ink-dim text-center">
-                As the creator, you can't submit evidence on your own case.
-              </p>
             )}
 
             {error && (
