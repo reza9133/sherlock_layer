@@ -1,1 +1,1 @@
-Paris is the capital of France.
+"Paris" is the capital of France.
