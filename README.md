@@ -57,7 +57,7 @@ SherlockLayer uses that primitive to run a trust-minimized version of a classic 
 | | |
 |---|---|
 | 🌐 **Live Demo** | [sherlock-layer.pages.dev](https://sherlock-layer.pages.dev/) |
-| 📜 **Deployed Contract** | `0xe60d0d7d3e9502b9c6CBe259B28128f4714df9C0` |
+| 📜 **Deployed Contract** | `0x275D61280Fe32C166BCF2A49c65f61DbC3dF32FB` |
 | ⛓️ **Network** | GenLayer Testnet Bradbury |
 | 🔎 **Explorer** | [explorer-bradbury.genlayer.com](https://explorer-bradbury.genlayer.com) |
 | 🪙 **Testnet Faucet** | [testnet-faucet.genlayer.foundation](https://testnet-faucet.genlayer.foundation/) |
@@ -171,7 +171,7 @@ stateDiagram-v2
     [*] --> OPEN: create_case() + GEN bounty
     OPEN --> SOLVED: submit_evidence() → verdict satisfies = true
     OPEN --> OPEN: submit_evidence() → verdict satisfies = false
-    OPEN --> EXPIRED: attempts ≥ MAX_ATTEMPTS_PER_CASE (25)
+    OPEN --> EXPIRED: attempts ≥ MAX_ATTEMPTS_PER_CASE (100)
     OPEN --> CANCELLED: cancel_case() [creator only]
     SOLVED --> CLAIMED: claim_bounty() [verified solver only]
     CLAIMED --> [*]
@@ -192,7 +192,7 @@ stateDiagram-v2
 | Method | Description |
 |---|---|
 | `create_case(title: str, description: str, solution_criteria: str) -> u256` *(payable)* | Opens a new case. Requires a non-zero GEN deposit (`gl.message.value`), a non-empty title, and a `solution_criteria` of at least 3 characters. Returns the new `case_id`. |
-| `submit_evidence(case_id: u256, evidence_text: str) -> str` | Submits a deduction. Rejects the case creator submitting to their own case, truncates evidence to `MAX_EVIDENCE_CHARS` (4000), flips the case to `EXPIRED` once `MAX_ATTEMPTS_PER_CASE` (25) is reached, and drives the AI consensus adjudication. Returns `"SOLVED"` or `"UNSOLVED"`. |
+| `submit_evidence(case_id: u256, evidence_text: str) -> str` *(payable)* | Submits a deduction. Requires a submission fee of at least `0.02 GEN` (added to the bounty pot). Rejects the creator from submitting to their own case, truncates evidence to `MAX_EVIDENCE_CHARS` (4000), flips the case to `EXPIRED` once `MAX_ATTEMPTS_PER_CASE` (100) is reached, and drives AI consensus. Returns `"SOLVED"` or `"UNSOLVED"`. |
 | `claim_bounty(case_id: u256) -> None` | Transfers the locked bounty to the verified `solver` of a `SOLVED` case and moves it to `CLAIMED`. |
 | `cancel_case(case_id: u256) -> None` | Creator-only. Refunds the bounty and moves an `OPEN` case to `CANCELLED`. |
 
@@ -266,7 +266,7 @@ The frontend reads the deployed contract address from `NEXT_PUBLIC_CONTRACT_ADDR
 
 ```bash
 # .env.local
-NEXT_PUBLIC_CONTRACT_ADDRESS=0xe60d0d7d3e9502b9c6CBe259B28128f4714df9C0
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x275D61280Fe32C166BCF2A49c65f61DbC3dF32FB
 ```
 
 If this variable is unset, `utils/client.js` falls back to the live Testnet Bradbury deployment above — so the dashboard works out of the box against the existing protocol instance. Point it at your own address once you've deployed a fresh contract (below).
@@ -324,7 +324,7 @@ genvm-lint check sherlock_layer.py
 - **Secret criteria aren't encrypted.** GenVM contract storage is public chain state. `solution_criteria` is simply omitted from every view method's response (`PublicCaseView` vs. the internal `MysteryCase`), which keeps it out of the UI and casual block explorers — it is **not** cryptographically hidden from anyone reading raw contract state directly.
 - **Prompt injection defense is a mitigation, not a formal proof.** Regex-based tag stripping plus an isolated `<UNTRUSTED>` boundary substantially raises the bar against instruction hijacking, but adjudication quality still ultimately depends on the underlying LLM's instruction-following. Only Hunter-supplied `evidence_text` is sanitized/isolated this way; `title` and `solution_criteria` are treated as trusted, author-controlled input.
 - **AI consensus adds latency.** `submit_evidence` resolves synchronously on-chain but can take anywhere from a few seconds to roughly 90 seconds while validators independently run the LLM evaluation and reach consensus. The dashboard's "Validators are deliberating…" state reflects that wait.
-- **Attempt and size limits bound cost and spam.** `MAX_ATTEMPTS_PER_CASE` (25) auto-expires a case that's absorbed too many submissions, and `MAX_EVIDENCE_CHARS` (4000) bounds prompt size per submission.
+- **Attempt and size limits bound cost and spam.** `MAX_ATTEMPTS_PER_CASE` (100) auto-expires a case that's absorbed too many submissions, and `MAX_EVIDENCE_CHARS` (4000) bounds prompt size per submission.
 - **Testnet chain config can drift.** `utils/client.js` imports a ready-made `testnetBradbury` chain from `genlayer-js/chains` when available, falling back to a hand-rolled chain object otherwise. If you rely on the fallback, double-check its `id` / RPC / explorer URLs against [docs.genlayer.com](https://docs.genlayer.com) before treating it as ground truth — testnet endpoints do move.
 
 ## Frontend Highlights
