@@ -400,7 +400,7 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
               </div>
             )}
 
-            {/* AI Rejection & Prompt Injection Security Alert UI */}
+            {/* Clean Secret-Safe Rejection & Prompt Injection Alert UI */}
             {caseData.last_verdict_reasoning && caseData.status === 'OPEN' && (
               <div className={`border rounded p-3 text-sm flex items-start gap-2 mt-3 ${
                 caseData.evidence_text?.toLowerCase().includes('ignore') || 
@@ -413,15 +413,14 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
                 <div>
                   <span className="font-case font-bold block mb-0.5">
                     {caseData.evidence_text?.toLowerCase().includes('ignore') || caseData.evidence_text?.toLowerCase().includes('override')
-                      ? '🚨 Security Alert: Prompt Injection / Bypass Attempt Blocked!'
-                      : '❌ AI Adjudication Result: Rejected'}
+                      ? '🚨 Security Alert: Prompt Injection / Bypass Attempt Blocked'
+                      : '❌ Incorrect Deduction'}
                   </span>
-                  <p className="text-xs text-ink-dim leading-relaxed">{caseData.last_verdict_reasoning}</p>
-                  {caseData.evidence_text?.toLowerCase().includes('ignore') && (
-                    <span className="text-[0.65rem] text-blood/90 block mt-1 font-bold">
-                      [System Note]: Malicious override patterns detected and neutralized by GenLayer consensus.
-                    </span>
-                  )}
+                  <p className="text-xs text-ink-dim leading-relaxed">
+                    {caseData.evidence_text?.toLowerCase().includes('ignore') || caseData.evidence_text?.toLowerCase().includes('override')
+                      ? 'Malicious override pattern detected. The GenLayer AI consensus safely rejected the submission and protected the case.'
+                      : 'The AI consensus validators rejected this evidence. Review the clues and try again.'}
+                  </p>
                 </div>
               </div>
             )}
