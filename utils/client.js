@@ -93,7 +93,7 @@ export const bradburyChain = genlayerChains.testnetBradbury ?? FALLBACK_BRADBURY
 
 
 
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xe60d0d7d3e9502b9c6CBe259B28128f4714df9C0';
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x275D61280Fe32C166BCF2A49c65f61DbC3dF32FB';
 
 
 // ---------------------------------------------------------------------
