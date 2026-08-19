@@ -26,7 +26,8 @@ CASE_STATUS_CANCELLED = "CANCELLED"
 CASE_STATUS_EXPIRED = "EXPIRED"
 
 MAX_PAGE_SIZE = 50
-MAX_ATTEMPTS_PER_CASE = 25
+MAX_ATTEMPTS_PER_CASE = 100
+SUBMISSION_FEE = u256(20000000000000000)  # 0.02 GEN fee added to bounty pot
 MAX_EVIDENCE_CHARS = 4000
 
 
@@ -193,7 +194,7 @@ class SherlockLayer(gl.Contract):
         self.next_case_id = u256(int(self.next_case_id) + 1)
         return case_id
 
-    @gl.public.write
+    @gl.public.write.payable
     def submit_evidence(self, case_id: u256, evidence_text: str) -> str:
         case = self.cases.get(case_id, None)
         if case is None:
@@ -207,6 +208,11 @@ class SherlockLayer(gl.Contract):
                 "Case creator cannot submit evidence for their own case"
             )
 
+        if gl.message.value < SUBMISSION_FEE:
+            raise gl.vm.UserError(
+                "A submission fee of at least 0.02 GEN is required"
+            )
+
         evidence_clean = evidence_text.strip()
         if len(evidence_clean) == 0:
             raise gl.vm.UserError("Evidence text is required")
@@ -218,6 +224,7 @@ class SherlockLayer(gl.Contract):
                 "This case has hit its maximum investigation attempts"
             )
 
+        case.bounty = u256(int(case.bounty) + int(gl.message.value))
         case.evidence_text = evidence_clean[:MAX_EVIDENCE_CHARS]
         case.attempts = u256(int(case.attempts) + 1)
 
