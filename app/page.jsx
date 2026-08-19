@@ -37,7 +37,7 @@ import {
 } from '../utils/client';
 
 const PAGE_SIZE = 6;
-const MAX_ATTEMPTS_PER_CASE = 25;
+const MAX_ATTEMPTS_PER_CASE = 100;
 
 // ---------------------------------------------------------------------
 // Small presentational helpers
