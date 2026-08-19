@@ -404,12 +404,13 @@ export async function createCase({ account, title, description, solutionCriteria
 
 export async function submitEvidence({ account, caseId, evidenceText }) {
   const client = getWriteClient(account);
+  const feeWei = BigInt(ethers.utils.parseEther("0.02").toString());
 
   const hash = await client.writeContract({
     address: CONTRACT_ADDRESS,
     functionName: 'submit_evidence',
     args: [caseId, evidenceText],
-    value: 0,
+    value: feeWei,
   });
 
   return waitForReceipt(client, hash);
@@ -490,5 +491,4 @@ export function shortenAddress(address) {
 
 // Re-exported for callers that need direct SDK access (e.g. reading raw tx status).
 
-export { createAccount }; 
-
+export { createAccount };
