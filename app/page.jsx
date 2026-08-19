@@ -400,6 +400,32 @@ function CaseDetailModal({ caseId, account, onClose, onChanged }) {
               </div>
             )}
 
+            {/* AI Rejection & Prompt Injection Security Alert UI */}
+            {caseData.last_verdict_reasoning && caseData.status === 'OPEN' && (
+              <div className={`border rounded p-3 text-sm flex items-start gap-2 mt-3 ${
+                caseData.evidence_text?.toLowerCase().includes('ignore') || 
+                caseData.evidence_text?.toLowerCase().includes('override') ||
+                caseData.evidence_text?.toLowerCase().includes('untrusted')
+                  ? 'border-blood/90 bg-blood/20 text-blood animate-pulse'
+                  : 'border-blood/40 bg-blood/10 text-blood'
+              }`}>
+                <ShieldAlert size={18} className="shrink-0 mt-0.5 text-blood" />
+                <div>
+                  <span className="font-case font-bold block mb-0.5">
+                    {caseData.evidence_text?.toLowerCase().includes('ignore') || caseData.evidence_text?.toLowerCase().includes('override')
+                      ? '🚨 Security Alert: Prompt Injection / Bypass Attempt Blocked!'
+                      : '❌ AI Adjudication Result: Rejected'}
+                  </span>
+                  <p className="text-xs text-ink-dim leading-relaxed">{caseData.last_verdict_reasoning}</p>
+                  {caseData.evidence_text?.toLowerCase().includes('ignore') && (
+                    <span className="text-[0.65rem] text-blood/90 block mt-1 font-bold">
+                      [System Note]: Malicious override patterns detected and neutralized by GenLayer consensus.
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             <SectionDivider />
 
             {caseData.status === 'OPEN' && !isCreator && (
